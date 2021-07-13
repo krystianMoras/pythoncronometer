@@ -30,11 +30,13 @@ class Food:
 
     def _getServings(self, array):
         pivot = -1
+
         for k in range(len(array)):
             if str(array[k]).startswith("X"):
                 pivot = k
         numOfServings = array[pivot - 2]
         resultantBeginning = pivot - 8 - 7 * numOfServings - 2 + 7
+        last = resultantBeginning
         for j in range(resultantBeginning, pivot - 2 - 8, 7):
             serving = Serving()
             serving.weight = array[j]
@@ -42,7 +44,10 @@ class Food:
             serving.name = str(array[j + 5]).strip(".0")
             serving.pointerToName = array[j + 2] - 1
             self.servingsList.append(serving)
-        j += 7
+            last = j+7
+
+
+        j = last
         #
         serving = Serving()
         serving.weight = array[j]
@@ -66,9 +71,10 @@ class Food:
             if serving.name not in [x.name for x in uniques]:
                 uniques.append(serving)
         self.servingsList = uniques
-        print(self.nutrientMap)
-        print(self.servingsList)
         return self
+
+    def __repr__(self):
+        return f"Nutrients:{self.nutrientMap} \n Servings: {self.servingsList}"
 
 
 class Serving:

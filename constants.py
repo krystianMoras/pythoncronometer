@@ -8,6 +8,8 @@ GWTGenerateAuthFormat = GWTGenerateAuthToken = "7|0|8|https://cronometer.com/cro
 GWTLogoutFormat = "7|0|6|https://cronometer.com/cronometer/|" + GWTHeader + "|com.cronometer.client.CronometerService|logout|java.lang.String/2004016611|{nonce}|1|2|3|4|1|5|6|"
 GWTGetFoodFormat = "7|0|7|https://cronometer.com/cronometer/|" + GWTHeader + "|com.cronometer.client.CronometerService|getFood|java.lang.String/2004016611|I|{nonce}|1|2|3|4|2|5|6|7|{foodID}|"
 GWTAddServingFormat = "7|0|9|https://cronometer.com/cronometer/|" + GWTHeader + "|com.cronometer.client.CronometerService|addServing|java.lang.String/2004016611|com.cronometer.client.data.Serving/4179698402|I|{nonce}|com.cronometer.client.data.Day/1013293213|1|2|3|4|3|5|6|7|8|6|9|{day}|{month}|{year}|0|0|0|{grams}|{foodID}|A|{servingID}|1|0|{userid}|"
+GWTFindFoodFormat = "7|0|10|https://cronometer.com/cronometer/|" + GWTHeader + "|com.cronometer.client.CronometerService|findFoods|java.lang.String/2004016611|I|com.cronometer.client.data.Source/2927124550|com.cronometer.client.widgets.FoodSearchPanel$FoodSearchTabSelection/3991074765|{nonce}|{query}|1|2|3|4|7|5|5|6|7|6|5|8|9|10|{number_of_suggestions}|7|0|0|0|8|0|"
+
 # GWT urls
 GWTBaseURL = "https://cronometer.com/cronometer/app"
 # Urls
