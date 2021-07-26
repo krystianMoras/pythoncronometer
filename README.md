@@ -4,7 +4,6 @@ Since Cronometer won't release API this python library allows to communicate wit
 If Cronometer team does not want this to be public feel free to contact me.
 # Usage
 
-Create a cookies.txt (I'll fix it next push)
 Start a client
 ```
 session = requests.Session()
@@ -18,7 +17,15 @@ Add meal to diary
 e.g. add 1000 ml of tap water on 6th July 2021
 ```
 #client.addServing(year,month,day,foodID,servingID,grams)
-client.addServing(2021,7,6,455493,9942233,1000)
+alphabeticid = client.addServing(2021,7,6,455493,9942233,1000)
+```
+Edit
+```
+client.editServing(2021,7,26,455493,9942233,10,alphabeticid)
+```
+Delete
+```
+client.deleteServing(alphabeticid)
 ```
 To obtain serving ID and food ID you can use following methods
 ```
@@ -26,6 +33,10 @@ print(client.findFood("tap water",5))
 #{'Tea, Black, Brewed, Prepared with Tap Water': 7027, 'Beverages, Water, Tap, Municipal': 6646, 'Beverages, Water, Tap, Drinking': 6643, 'Beverages, Water, Tap, Well': 6640, 'Tap Water': 455493}
 print(client.getFood(455493).servingsList[0])
 #ServingId=9942233 Name="mL" Weight=1.0g
+```
+Get all custom foods names and ids
+```
+print(client.findMyFoods())
 ```
 You can also export daily summary and servings
 ```
