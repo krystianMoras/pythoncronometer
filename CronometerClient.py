@@ -15,10 +15,18 @@ class Client:
         self.userid = None
         self.session = session
         self.authtoken = None
+        # constants from authentication
+        self.activity = None
+        self.macroCarbs = None
+        self.macroLipids = None
+        self.macroProtein = None
 
     def _handleExceptions(self, request):
-        if "Invalid or expired session" in request.text:
-            print("Invalid or expired session")
+        if "EX" in request.text:
+            if "Invalid or expired session" in request.text:
+                print("Invalid or expired session")
+                return False
+            print(request.text)
             return False
         return True
 
@@ -34,7 +42,7 @@ class Client:
             open("cookies", "w")
         cookie = open("cookies").read()
         if cookie != "":
-            self.userid, self.nonce = cookie.split()
+            self.userid, self.nonce, self.activity, self.macroCarbs, self.macroProtein, self.macroLipids = cookie.split()
             print("Logged in")
             return True
         # to obtain anticsrf token, must "pretend" to be a website
@@ -51,14 +59,18 @@ class Client:
         self.nonce = loginRequest.cookies.get("sesnonce")
         # login to gwt API and get user id
         gwtRequest = self.session.post(GWTBaseURL, headers=gwtHeaders, data=GWTAUTH)
+        self.activity, self.macroCarbs, self.macroProtein, self.macroLipids = ResponseHandlers.extractAuthInfo(
+            gwtRequest.text[4:])
+
         self.nonce = gwtRequest.cookies.get("sesnonce")
         print(gwtRequest)
         if "EX" in gwtRequest.text:
             print(gwtRequest.text)
             return False
         self.userid = re.findall("OK\[(?P<userid>\d*),.*", gwtRequest.text)[0]
-        cookieFile = open("cookies.txt", "w")
-        cookieFile.write(f"{self.userid} {self.nonce}")
+        cookieFile = open("cookies", "w")
+        cookieFile.write(
+            f"{self.userid} {self.nonce} {self.activity} {self.macroCarbs} {self.macroProtein} {self.macroLipids}")
         cookieFile.close()
         print("Logged in")
         return True
@@ -175,11 +187,49 @@ class Client:
             return None
         print(f"Deleted {alphabeticid}")
         print(request.text)
-    # def addFood(self,name,food):
-    #
-    #     nutrientsString = food.convertToGWT()
-    #     GWTAddFood = GWTAddFoodFormat.format(nonce=self.nonce, userid=self.userid,name=name,nutrientsString=nutrientsString)
-    #     request = self.session.post(GWTBaseURL, data=GWTAddFood, headers=gwtHeaders)
-    #     if not self._handleExceptions(request):
-    #         return None
-    #     print(request.text)
+
+    def getTargets(self):
+
+        GWTGetTargets = GWTGetTargetsFormat.format(nonce=self.nonce)
+        request = self.session.post(GWTBaseURL, data=GWTGetTargets, headers=gwtHeaders)
+        if not self._handleExceptions(request):
+            return None
+        jsonResponse = request.text[4:]
+        targets = ResponseHandlers.extractTargets(jsonResponse)
+        # calories
+        targets[208] = targets[208] * (1 + float(self.activity))
+        # carbs
+        targets[205] = targets[208] * float(self.macroCarbs) / 400
+        # protein
+        targets[203] = targets[208] * float(self.macroProtein) / 400
+        # lipids
+        targets[204] = targets[208] * float(self.macroLipids) / 900
+        return targets
+
+    #servings/categories/notes not yet supported
+    #returns id of newly created recipe
+    def addRecipe(self, food: Food.Food):
+        #workaround, first create a meal with ambigous name to get id
+        GWTAddRecipeHelper = GWTAddRecipeHelperFormat.format(nonce=self.nonce,name=food.name,userid=self.userid)
+        request = self.session.post(GWTBaseURL, data=GWTAddRecipeHelper, headers=gwtHeaders)
+        if not self._handleExceptions(request):
+            return None
+        print("Successfully added new recipe")
+        jsonResponse = json.loads(request.text[4:])
+        strings = []
+        for i in range(len(jsonResponse)):
+            if type(jsonResponse[i]) is str:
+                strings.append(i)
+        food.id = jsonResponse[strings[-1]+3]
+        self.editRecipe(food)
+        #for some reason I need to call it twice (request is exact same), first call creates measure "g" with weight equal to total recipe weight
+        self.editRecipe(food)
+
+        return food.id
+    def editRecipe(self,food:Food.Food):
+        GWTAddRecipe = GWTAddRecipeFormat.format(nonce=self.nonce, userid=self.userid, numOfNutrients=0, id=food.id, ingredientsString=food.ingredientsToGWT(), name=food.name)
+        request = self.session.post(GWTBaseURL, data=GWTAddRecipe, headers=gwtHeaders)
+        if not self._handleExceptions(request):
+            return None
+        print("Succesfully edited recipe")
+        return food.id

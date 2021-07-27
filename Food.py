@@ -6,7 +6,8 @@ class Food:
         self.nutrientMap = {}
         self.servingsList = []
         self.ingredients = {}
-        self.name = ""
+        self.name = "pythoncronometerplaceholder"
+        self.id = -1
         self.nutrientMap["fatsPercent"] = 0
         self.nutrientMap["alcoholPercent"] = 0
         self.nutrientMap["carbsPercent"] = 0
@@ -27,20 +28,6 @@ class Food:
         numOfNutrients = array[pivot - 8 - 7 * numOfServings - 2 + 7 - 2]
         return pivot - 8 - 7 * numOfServings - 2 + 7 - 2 - 4 * numOfNutrients
 
-    # def convertToGWT(self):
-    #     gwtString = ""
-    #     reverseNutrientIds = {v: k for k, v in nutrientIds.items()}
-    #     numofnutrients = len(self.nutrientMap)
-    #     gwtString += str(numofnutrients) + "|"
-    #     somenumber = 16
-    #     for i in range(numofnutrients):
-    #         gwtString += str(somenumber) + "|"
-    #
-    #         gwtString += str(reverseNutrientIds[list(self.nutrientMap.keys())[i]]) + "|"
-    #         gwtString += str(somenumber + 1) + "|"
-    #         gwtString += str(int(list(self.nutrientMap.values())[i])) + "|"
-    #     return gwtString
-
     def _getNutrients(self, array, strings):
         i = self._calculateNutrientsStart(array, strings[-1])
         counter = 0
@@ -50,7 +37,10 @@ class Food:
             x = nutrientIds.get(array[j + 2], 'not found')
             if x != "not found":
                 counter += 1
-                self.nutrientMap[x] = array[j]
+                self.nutrientMap[array[j + 2]] = array[j]
+
+    def _modifyNutrients(self, recipeSize):
+        self.nutrientMap = {nutrient[0]: nutrient[1] * 100 / recipeSize for nutrient in self.nutrientMap.items()}
 
     def _getServings(self, array, strings):
         pivot = strings[-1]
@@ -68,24 +58,24 @@ class Food:
         j = last
         #
         serving = Serving()
+        # if its a recipe multiply nutrients by array[j]/100
+        if len(strings) > 1:
+            self._modifyNutrients(array[j])
         serving.weight = array[j]
         serving.id = array[j + 4]
         serving.name = str(array[j + 6]).strip(".0")
-        serving.pointerToName = array[j + 3] - 1
+        serving.pointerToName = array[j + 3]
         self.servingsList.append(serving)
 
         subarray = array[len(array) - 3]
         self.name = subarray[-1]
-        uniques = []
+        # uniques = []
         for serving in self.servingsList:
 
             if serving.name == "1":
                 serving.name = subarray[serving.pointerToName]
             else:
                 serving.name += " " + subarray[serving.pointerToName]
-            if serving.name not in [x.name for x in uniques]:
-                uniques.append(serving)
-        self.servingsList = uniques
 
     def _getIngredients(self, array, strings):
 
@@ -105,6 +95,17 @@ class Food:
         self._getIngredients(array, strings)
 
         return self
+
+    def ingredientsToGWT(self):
+        string = str(len(self.ingredients)) + "|"
+
+        for ingredient in self.ingredients.items():
+            string += f"17|{ingredient[1][1]}|{ingredient[0]}|A|{ingredient[1][0]}|0|0|"
+        string += "0"
+        return string
+
+    def addIngredient(self, foodID, servingID, weight):
+        self.ingredients[foodID] = (servingID, weight)
 
     def __repr__(self):
         return f"{self.name} \n Ingredients: {self.ingredients} \n Nutrients: {self.nutrientMap} \n Servings: {self.servingsList} "
