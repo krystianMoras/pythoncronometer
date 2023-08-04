@@ -1,21 +1,17 @@
 import requests
-from dotenv import load_dotenv
-import os
-import Food
 from CronometerClient import Client
-load_dotenv()
-USERNAME = os.environ.get("CRONOMETERUSERNAME")
-PASSWORD = os.environ.get("CRONOMETERPASSWORD")
+import pandas
+from io import StringIO
+import yaml
+
+with open('secrets.yaml') as f:
+    secrets = yaml.load(f, Loader=yaml.FullLoader)
+USERNAME = secrets['cronometer']['username']
+PASSWORD = secrets['cronometer']['password']
 
 session = requests.Session()
 client = Client(session)
 client.login(USERNAME, PASSWORD)
-food = Food.Food()
-food.name = "Test Recipe"
-#add 100 grams of Bananas in teaspoons
-food.addIngredient(450856, 998947, 100)
-food.id = client.addRecipe(food)
-
-
-
-
+exported = StringIO(client.exportDailyNutritionSummary("2023-06-29", "2023-07-29"))
+df = pandas.read_csv(exported)
+print(df)
